@@ -1,128 +1,134 @@
-//* 2C = Two of Clubs
-//* 2S = Two of Spades
-//* 2H = Two of Hearts
-//* 2D = Two of Diamonds
+const myModule = (() => {
+  "use strict";
+  let deck = [];
+  const pintas = ["C", "D", "H", "S"],
+    letters = ["A", "J", "Q", "K"];
+  let playersPoints = [];
 
-let deck = [];
-const pintas = ["C", "D", "H", "S"];
-const letters = ["A", "J", "Q", "K"];
-let playerHand = [];
-let playerPoints = 0,
-  cpuPoints = 0;
+  //* HTML references
 
-//* HTML references
+  const btnGetCard = document.querySelector("#btnGetCard"),
+    btnStopGame = document.querySelector("#btnStopGame"),
+    btnNewGame = document.querySelector("#btnNewGame");
+  const playersCardsDiv = document.querySelectorAll(".cardsDiv");
+  let scoreboard = document.querySelectorAll("small");
 
-const btnGetCard = document.querySelector("#btnGetCard");
-const btnStopGame = document.querySelector("#btnStopGame");
-const btnNewGame = document.querySelector("#btnNewGame");
-const playerCardsContainer = document.querySelector("#player-cards");
-const cpuCardsContainer = document.querySelector("#cpu-cards");
-let scoreboard = document.querySelectorAll("small");
-
-const createDeck = () => {
-  //* Create a new set of card of each
-  for (const pinta of pintas) {
-    //* Genero todos los números válidos
-    for (let i = 2; i < 11; i++) {
-      deck.push(i + pinta);
+  const createDeck = () => {
+    //* Create a new set of card of each
+    for (const pinta of pintas) {
+      //* Genero todos los números válidos
+      for (let i = 2; i < 11; i++) {
+        deck.push(i + pinta);
+      }
+      for (let letter of letters) {
+        deck.push(letter + pinta);
+      }
     }
-    for (let letter of letters) {
-      deck.push(letter + pinta);
+    return _.shuffle(deck);
+  };
+
+  //* Function that starts the game.
+  const startGame = (playersNumber = 1) => {
+    deck = createDeck();
+    playersPoints = [];
+    for (let i = 0; i < playersNumber + 1; i++) {
+      playersPoints.push(0);
     }
-  }
-  deck = _.shuffle(deck);
-  return deck;
-};
+    scoreboard.forEach((elem) => (elem.innerText = 0));
+    playersCardsDiv.forEach((elem) => deleteCards(elem));
+    btnGetCard.disabled = false;
+    btnStopGame.disabled = false;
+  };
 
-createDeck();
-console.log(deck);
+  //* Function to take a card from the deck
+  const takeCard = () => {
+    return deck.length === 0
+      ? console.log("There are no cards available in this deck.")
+      : deck.pop();
+  };
 
-//* Function to take a card from the deck
-
-const takeCard = () => {
-  if (deck.length === 0) {
-    throw "There are no cards available in this deck.";
-  }
-  return deck.pop();
-};
-
-const cardValue = (card) => {
   //* Extract the value from the card and return it.
-  const value = card.substring(0, card.length - 1);
-  return isNaN(value) ? (value === "A" ? 11 : 10) : value * 1;
-};
+  const cardValue = (card) => {
+    const value = card.substring(0, card.length - 1);
+    return isNaN(value) ? (value === "A" ? 11 : 10) : value * 1;
+  };
 
-//* CPU turn
-const cpuTurn = (minimumPoints) => {
-  let cpuPoints = 0;
-  do {
-    const card = takeCard();
-    cpuPoints += cardValue(card);
-    scoreboard[1].innerText = cpuPoints;
+  //* Turn: 0 === player 1, ... last === cpu.
+  const tempScoreboard = (card, turn) => {
+    playersPoints[turn] += cardValue(card);
+    scoreboard[turn].innerText = playersPoints[turn];
+    return playersPoints[turn];
+  };
 
+  const createCard = (card, turn) => {
     const cardImg = document.createElement("img");
     cardImg.src = `assets/cartas/${card}.png`;
     cardImg.classList.add("cards");
-    cpuCardsContainer.append(cardImg);
-    if (minimumPoints > 21) {
-      break;
+    playersCardsDiv[turn].append(cardImg);
+  };
+
+  const findWinner = () => {
+    const [playerPoints, cpuPoints] = playersPoints;
+    setTimeout(() => {
+      if (
+        playerPoints > cpuPoints ||
+        (playerPoints === 21 && cpuPoints < 21) ||
+        cpuPoints > 21
+      ) {
+        alert("You've won!");
+      } else if (playerPoints > 21 || cpuPoints > playersPoints[0]) {
+        alert("You've lost!");
+      } else {
+        alert("It's a tie!");
+      }
+    }, 10);
+  };
+
+  //* CPU turn
+  const cpuTurn = (minimumPoints) => {
+    let cpuPoints = 0;
+    let turn = playersPoints.length - 1;
+    do {
+      const card = takeCard();
+      cpuPoints = tempScoreboard(card, turn);
+
+      createCard(card, turn);
+    } while (cpuPoints < minimumPoints && minimumPoints <= 21);
+    findWinner();
+  };
+
+  const deleteCards = (container) => {
+    while (container.innerHTML.length > 0) {
+      container.removeChild(container.lastChild);
     }
-  } while (cpuPoints < minimumPoints && minimumPoints <= 21);
+  };
 
-  setTimeout(() => {
-    if (
-      playerPoints > cpuPoints ||
-      (playerPoints === 21 && cpuPoints < 21) ||
-      cpuPoints > 21
-    ) {
-      alert("You've won!");
-    } else if (playerPoints > 21 || cpuPoints > playerPoints) {
-      alert("You've lost!");
-    } else {
-      alert("It's a tie!");
-    }
-  }, 10);
-};
+  //* Events to listen
 
-const deleteCards = (container) => {
-  while (container.innerHTML.length > 0) {
-    container.removeChild(container.lastChild);
-  }
-};
+  btnGetCard.addEventListener("click", () => {
+    const card = takeCard();
+    const playerPoints = tempScoreboard(card, 0);
 
-//* Events to listen
+    createCard(card, 0);
 
-btnGetCard.addEventListener("click", () => {
-  const card = takeCard();
-  playerPoints += cardValue(card);
-  scoreboard[0].innerText = playerPoints;
+    playerPoints > 21
+      ? (btnGetCard.disabled = true)
+      : (btnGetCard.disabled = false);
+  });
 
-  const cardImg = document.createElement("img");
-  cardImg.src = `assets/cartas/${card}.png`;
-  cardImg.classList.add("cards");
-  playerCardsContainer.append(cardImg);
+  btnStopGame.addEventListener("click", () => {
+    btnGetCard.disabled = true;
+    btnStopGame.disabled = true;
+    cpuTurn(playersPoints[0]);
+  });
 
-  playerPoints > 21
-    ? (btnGetCard.disabled = true)
-    : (btnGetCard.disabled = false);
-});
+  btnNewGame.addEventListener("click", () => {
+    console.clear();
+    startGame();
+  });
 
-btnStopGame.addEventListener("click", () => {
-  btnGetCard.disabled = true;
-  btnStopGame.disabled = true;
-  cpuTurn(playerPoints);
-});
-
-btnNewGame.addEventListener("click", () => {
-  console.clear();
-  deck = [];
-  deck = createDeck();
-  scoreboard[0].innerText = 0;
-  scoreboard[1].innerText = 0;
-  playerPoints = 0;
-  cpuPoints = 0;
-  deleteCards(playerCardsContainer);
-  deleteCards(cpuCardsContainer);
-  btnGetCard.disabled = false;
-  btnStopGame.disabled = false;
-});
+  //* Exporting functions from my module.
+  return {
+    newGame: startGame,
+  };
+})();
