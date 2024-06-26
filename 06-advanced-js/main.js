@@ -3,6 +3,7 @@ import javascriptLogo from "./javascript.svg";
 import viteLogo from "/vite.svg";
 import { environmentsComponent } from "./source/concepts/01-environments";
 import { callbacksComponent } from "./source/concepts/02-callbacks";
+import { promiseComponent } from "./source/concepts/03-promises";
 
 document.querySelector("#app").innerHTML = `
   <div>
@@ -12,7 +13,7 @@ document.querySelector("#app").innerHTML = `
     <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
       <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
     </a>
-    <h1>Hello Vite!</h1>
+    <h1>Callbacks, Promises and HELL!</h1>
     <div class="card">
     </div>
   </div>
@@ -20,5 +21,6 @@ document.querySelector("#app").innerHTML = `
 
 const element = document.querySelector(".card");
 
-callbacksComponent(element);
+promiseComponent(element);
+// callbacksComponent(element);
 // environmentsComponent(element);
