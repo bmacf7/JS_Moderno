@@ -8,7 +8,8 @@ import { heroes } from "../data/heroes";
 export const callbacksComponent = (element) => {
   console.log("callbacksComponent");
 
-  const id = "5d86371f25a058e5b1c8a65ea";
+  const id = "5d86371f25a058e5b1c8a65e";
+  const id2 = "5d86371f233c9f2425f16916";
   findHero(id, (error, hero) => {
     // One solution to handle undefined values
     // element.innerHTML = hero?.name || `Hero doesn't exist`;
@@ -16,7 +17,15 @@ export const callbacksComponent = (element) => {
       element.innerHTML = error;
       return;
     }
-    element.innerHTML = hero.name;
+
+    findHero(id2, (error, hero2) => {
+      if (error) {
+        element.innerHTML = error;
+        return;
+      }
+
+      element.innerHTML = `${hero.name} / ${hero2.name}`;
+    });
   });
 };
 
